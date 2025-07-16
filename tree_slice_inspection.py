@@ -1,4 +1,3 @@
-
 import streamlit as st
 from PIL import Image, ExifTags
 import pandas as pd
@@ -21,7 +20,8 @@ def get_exif_data(image):
         if not exif:
             return {}
         return {ExifTags.TAGS.get(tag, tag): value for tag, value in exif.items()}
-    except:
+    except Exception as e:
+        st.error(f"Error extracting EXIF data: {e}")
         return {}
 
 def get_timestamp(exif_data):
@@ -44,7 +44,8 @@ def get_gps(exif_data):
         lon = convert(gps[4])
         if gps[3] == 'W': lon = -lon
         return (lat, lon)
-    except:
+    except Exception as e:
+        st.error(f"Error extracting GPS data: {e}")
         return None
 
 def compute_hash(image):
@@ -58,40 +59,41 @@ def categorize_diameter(d):
     return "C"
 
 # Upload section
-uploaded_file = st.file_uploader("📸 Upload Tree Slice Photo", type=["jpg", "jpeg", "png"])
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Photo", use_column_width=True)
+uploaded_files = st.file_uploader("📸 Upload Tree Slice Photos", type=["jpg", "jpeg", "png"], accept_multiple_files=True)
+if uploaded_files:
+    for uploaded_file in uploaded_files:
+        image = Image.open(uploaded_file)
+        st.image(image, caption=f"Uploaded Photo: {uploaded_file.name}", use_column_width=True)
 
-    exif_data = get_exif_data(image)
-    timestamp = get_timestamp(exif_data)
-    gps = get_gps(exif_data)
+        exif_data = get_exif_data(image)
+        timestamp = get_timestamp(exif_data)
+        gps = get_gps(exif_data)
 
-    if timestamp:
-        st.success(f"📅 Timestamp from EXIF: {timestamp}")
-    else:
-        timestamp = st.text_input("Enter timestamp manually (YYYY-MM-DD HH:MM:SS)")
+        if timestamp:
+            st.success(f"📅 Timestamp from EXIF: {timestamp}")
+        else:
+            timestamp = st.text_input("Enter timestamp manually (YYYY-MM-DD HH:MM:SS)")
 
-    tree_id = st.text_input("🌳 Tree ID or Vendor Reference")
-    location = st.text_input("📍 Location or ROW")
-    diameter_cm = st.number_input("📏 Measured Diameter (cm)", min_value=0.0, step=0.1)
+        tree_id = st.text_input("🌳 Tree ID or Vendor Reference")
+        location = st.text_input("📍 Location or ROW")
+        diameter_cm = st.number_input("📏 Measured Diameter (cm)", min_value=0.0, step=0.1)
 
-    if st.button("Analyze & Save"):
-        if diameter_cm > 0:
-            area = round(math.pi * (diameter_cm / 2) ** 2, 2)
-            category = categorize_diameter(diameter_cm)
-            result = {
-                "Tree ID": tree_id or "Unknown",
-                "Timestamp": timestamp,
-                "Location": location,
-                "GPS": gps,
-                "Diameter (cm)": diameter_cm,
-                "Area (cm²)": area,
-                "Category": category,
-                "Image Hash": compute_hash(image)
-            }
-            st.session_state.data.append(result)
-            st.success("✅ Analysis Saved!")
+        if st.button("Analyze & Save"):
+            if diameter_cm > 0:
+                area = round(math.pi * (diameter_cm / 2) ** 2, 2)
+                category = categorize_diameter(diameter_cm)
+                result = {
+                    "Tree ID": tree_id or "Unknown",
+                    "Timestamp": timestamp,
+                    "Location": location,
+                    "GPS": gps,
+                    "Diameter (cm)": diameter_cm,
+                    "Area (cm²)": area,
+                    "Category": category,
+                    "Image Hash": compute_hash(image)
+                }
+                st.session_state.data.append(result)
+                st.success("✅ Analysis Saved!")
 
 # Display result table
 if st.session_state.data:
