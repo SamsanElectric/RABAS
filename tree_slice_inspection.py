@@ -1,29 +1,26 @@
 
 import streamlit as st
 from PIL import Image, ExifTags
-import math
 import pandas as pd
+import math
 import datetime
 import imagehash
 import io
 
-st.set_page_config(page_title="Smart Tree Slice Inspection", layout="centered")
-st.title("🌲 Smart Tree Slice Inspection App (for ROW Vendors)")
-st.write("Upload tree slice photos with ruler, and this tool will auto-classify and track them.")
+st.set_page_config(page_title="Smart Tree Inspection", layout="centered")
+st.title("🌲 Smart Tree Slice Inspection for ROW Vendors")
 
+# Session data store
 if "data" not in st.session_state:
     st.session_state.data = []
 
+# Extract EXIF
 def get_exif_data(image):
     try:
         exif = image._getexif()
         if not exif:
             return {}
-        return {
-            ExifTags.TAGS.get(tag, tag): value
-            for tag, value in exif.items()
-            if tag in ExifTags.TAGS
-        }
+        return {ExifTags.TAGS.get(tag, tag): value for tag, value in exif.items()}
     except:
         return {}
 
@@ -60,8 +57,8 @@ def categorize_diameter(d):
         return "B"
     return "C"
 
+# Upload section
 uploaded_file = st.file_uploader("📸 Upload Tree Slice Photo", type=["jpg", "jpeg", "png"])
-
 if uploaded_file:
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded Photo", use_column_width=True)
@@ -73,11 +70,12 @@ if uploaded_file:
     if timestamp:
         st.success(f"📅 Timestamp from EXIF: {timestamp}")
     else:
-        timestamp = st.text_input("Enter photo time manually (YYYY-MM-DD HH:MM:SS)")
+        timestamp = st.text_input("Enter timestamp manually (YYYY-MM-DD HH:MM:SS)")
 
-    location = st.text_input("📍 Location or ROW Name", "")
-    tree_id = st.text_input("🌳 Tree ID or Vendor Reference", "")
-    diameter_cm = st.number_input("📏 Measured Diameter from Photo (cm)", min_value=0.0, step=0.1)
+    tree_id = st.text_input("🌳 Tree ID or Vendor Reference")
+    location = st.text_input("📍 Location or ROW")
+    diameter_cm = st.number_input("📏 Measured Diameter (cm)", min_value=0.0, step=0.1)
+
     if st.button("Analyze & Save"):
         if diameter_cm > 0:
             area = round(math.pi * (diameter_cm / 2) ** 2, 2)
@@ -90,11 +88,12 @@ if uploaded_file:
                 "Diameter (cm)": diameter_cm,
                 "Area (cm²)": area,
                 "Category": category,
-                "Hash": compute_hash(image)
+                "Image Hash": compute_hash(image)
             }
             st.session_state.data.append(result)
             st.success("✅ Analysis Saved!")
 
+# Display result table
 if st.session_state.data:
     df = pd.DataFrame(st.session_state.data)
     st.subheader("📋 Inspection Results")
