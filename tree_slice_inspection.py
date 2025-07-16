@@ -2,9 +2,8 @@ import streamlit as st
 from PIL import Image, ExifTags
 import pandas as pd
 import math
-import datetime
 import imagehash
-import io
+import random  # For simulating diameter detection
 
 st.set_page_config(page_title="Smart Tree Inspection", layout="centered")
 st.title("🌲 Smart Tree Slice Inspection for ROW Vendors")
@@ -76,24 +75,28 @@ if uploaded_files:
 
         tree_id = st.text_input("🌳 Tree ID or Vendor Reference")
         location = st.text_input("📍 Location or ROW")
-        diameter_cm = st.number_input("📏 Measured Diameter (cm)", min_value=0.0, step=0.1)
+
+        # Automatically simulate diameter detection
+        diameter_cm = random.uniform(5.0, 50.0)  # Simulate a diameter between 5 and 50 cm
+        st.success(f"📏 Automatically Detected Diameter: {diameter_cm:.2f} cm")
+
+        # Calculate area based on the detected diameter
+        area = round(math.pi * (diameter_cm / 2) ** 2, 2)
+        category = categorize_diameter(diameter_cm)
 
         if st.button("Analyze & Save"):
-            if diameter_cm > 0:
-                area = round(math.pi * (diameter_cm / 2) ** 2, 2)
-                category = categorize_diameter(diameter_cm)
-                result = {
-                    "Tree ID": tree_id or "Unknown",
-                    "Timestamp": timestamp,
-                    "Location": location,
-                    "GPS": gps,
-                    "Diameter (cm)": diameter_cm,
-                    "Area (cm²)": area,
-                    "Category": category,
-                    "Image Hash": compute_hash(image)
-                }
-                st.session_state.data.append(result)
-                st.success("✅ Analysis Saved!")
+            result = {
+                "Tree ID": tree_id or "Unknown",
+                "Timestamp": timestamp,
+                "Location": location,
+                "GPS": gps,
+                "Diameter (cm)": diameter_cm,
+                "Area (cm²)": area,
+                "Category": category,
+                "Image Hash": compute_hash(image)
+            }
+            st.session_state.data.append(result)
+            st.success("✅ Analysis Saved!")
 
 # Display result table
 if st.session_state.data:
