@@ -3,7 +3,7 @@ from PIL import Image, ExifTags
 import pandas as pd
 import math
 import imagehash
-import pytesseract
+#import pytesseract
 import random  # For simulating diameter detection
 
 st.set_page_config(page_title="Smart Tree Inspection", layout="centered")
