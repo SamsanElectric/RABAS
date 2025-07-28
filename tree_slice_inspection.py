@@ -28,6 +28,8 @@ def get_timestamp(exif_data):
         return exif_data['DateTimeOriginal']
     elif 'DateTime' in exif_data:
         return exif_data['DateTime']
+    if not timestamp:
+    st.warning("No timestamp found in photo EXIF. Please enter it manually.")
     return None
 
 def get_gps(exif_data):
