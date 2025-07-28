@@ -3,6 +3,7 @@ from PIL import Image, ExifTags
 import pandas as pd
 import math
 import imagehash
+import pytesseract
 import random  # For simulating diameter detection
 
 st.set_page_config(page_title="Smart Tree Inspection", layout="centered")
@@ -28,7 +29,8 @@ def get_timestamp(exif_data):
         return exif_data['DateTimeOriginal']
     elif 'DateTime' in exif_data:
         return exif_data['DateTime']
-    if not timestamp:
+    
+    # If no timestamp is found, show a warning and return None
     st.warning("No timestamp found in photo EXIF. Please enter it manually.")
     return None
 
