@@ -50,7 +50,20 @@ def get_gps(exif_data):
     except Exception as e:
         st.error(f"Error extracting GPS data: {e}")
         return None
-
+        
+def extract_timestamp_via_ocr(image):
+    # Convert image to grayscale for better OCR accuracy
+    gray_image = image.convert('L')
+    # Run OCR
+    text = pytesseract.image_to_string(gray_image)
+    # Try to find a timestamp pattern (e.g. YYYY-MM-DD HH:MM:SS)
+    import re
+    match = re.search(r'\d{4}[-/]\d{2}[-/]\d{2}[ T]\d{2}:\d{2}:\d{2}', text)
+    if match:
+        return match.group(0)
+    # Try alternative patterns if needed
+    return None
+    
 def compute_hash(image):
     return str(imagehash.phash(image))
 
